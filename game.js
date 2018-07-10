@@ -115,3 +115,37 @@ class Level {
                 const obstacle = this.grid[y][x];
                 if (typeof obstacle !== 'undefined') {
                     return obstacle;
+                }
+            }
+        }
+        return undefined;
+    }
+
+    removeActor(actor) {
+        this.actors = this.actors.filter(el => el !== actor);
+    }
+
+    noMoreActors(type) {
+        if (this.actors) {
+            for (let actor of this.actors) {
+                if (actor.type === type) {
+                    return false;
+                };
+            };
+        };
+        return true;
+    }
+    playerTouched(type, actor) {
+        if (this.status !== null) {
+            return;
+        }
+        if (type === 'lava' || type === 'fireball') {
+            this.status = 'lost';
+        } else if (type === 'coin') {
+            this.removeActor(actor);
+            if (!this.actors.find(value => value.type === 'coin')) {
+                this.status = 'won';
+            }
+        }
+    }
+}
