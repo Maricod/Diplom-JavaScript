@@ -8,6 +8,8 @@ class Vector {
     plus(vector) {
         if (!(vector instanceof Vector)) {
             throw new Error("Можно прибавлять к вектору только вектор типа Vector");
+        // елси будет выброшено исключение, то выполнение функции прекратится,
+        // так что else можно убрать
         } else {
             return new Vector(this.x + vector.x, this.y + vector.y);
         }
@@ -23,6 +25,7 @@ class Actor {
         this.pos = pos;
         this.size = size;
         this.speed = speed;
+        // проверки аргументо лучше делать в начале
         if (!(pos instanceof Vector) || !(size instanceof Vector) || !(speed instanceof Vector)) {
             throw new Error("Не объект типа Vector");
         }
@@ -43,17 +46,26 @@ class Actor {
     }
 
     get type() {
+        // лушче возвращать сразу строку,
+        // чтобы нельзя было изменить занчение извне
         this.$type = 'actor';
         return this.$type;
     }
 
     isIntersect(actor) {
+        // вторая половина проверки лишняя
+        // потому что undefined instanceof Actor это false
         if (!(actor instanceof Actor) || actor === undefined) {
             throw new Error("Неверно задан actor");
+        // else можно убрать
         } else if (actor === this || actor.size.x < 0 || actor.size.y < 0) {
             return false;
+        // else можно убрать
+        // тут можно обратить выражение в if и написать просто
+        // return <выражение>
         } else if (this.top <= actor.bottom && this.right <= actor.left || this.right <= actor.left && this.bottom >= actor.top || this.left >= actor.right && this.bottom >= actor.top || this.left >= actor.right && this.top <= actor.bottom || this.top === actor.bottom || this.right === actor.left || this.left === actor.right || this.bottom === actor.top) {
             return false;
+        // else можно убрать
         } else {
             return true;
         }
@@ -62,6 +74,7 @@ class Actor {
 
 class Level {
     constructor(grid = [], actors = []) {
+        // можно создать копии массивов, чтобы снизить вероятность изменения извне
         this.grid = grid;
         this.actors = actors;
         this.height = this.grid.length;
@@ -71,11 +84,14 @@ class Level {
     }
 
     get player() {
+        // лучше присвоить в конструкторе, чтобы каждый раз не искать
+        // или не сохранять значение, чтобы поле нельзя было изменить извне
         this.$player = this.actors.find(value => value.type === 'player');
         return this.$player;
     }
 
     isFinished() {
+        // тут можно написать просто return <выражение в if>
         if (this.status !== null && this.finishDelay < 0) {
             return true;
         } else {
@@ -86,6 +102,7 @@ class Level {
     actorAt(actor) {
         if (!(actor instanceof Actor) || actor === undefined) {
             throw new Error("Неверно передан actor");
+        // это лишняя проверка
         } else if (this.top === actor.bottom || this.right === actor.left || this.left === actor.right || this.bottom === actor.top) {
             return undefined;
         } else {
@@ -97,6 +114,8 @@ class Level {
         if (!(pos instanceof Vector) || !(size instanceof Vector)) {
             throw new Error("не передан объект типа Vector");
         }
+        // значение присваивается переменной 1 раз,
+        // поэтому лучше использовать const
         let xStart = Math.floor(pos.x);
         let xEnd = Math.ceil(pos.x + size.x);
         let yStart = Math.floor(pos.y);
@@ -113,6 +132,7 @@ class Level {
         for (let y = yStart; y < yEnd; y++) {
             for (let x = xStart; x < xEnd; x++) {
                 const obstacle = this.grid[y][x];
+                // можно проверить просто if (obstacle)
                 if (typeof obstacle !== 'undefined') {
                     return obstacle;
                 }
@@ -126,11 +146,14 @@ class Level {
     }
 
     noMoreActors(type) {
+        // можно убрать проверку,
+        // в конструкторе есть значение по-умолчанию для этого поля
         if (this.actors) {
+            // тут можно использовать метод .some массива
             for (let actor of this.actors) {
                 if (actor.type === type) {
                     return false;
-                };
+                }; // лишние точки с запятой
             };
         };
         return true;
@@ -143,6 +166,7 @@ class Level {
             this.status = 'lost';
         } else if (type === 'coin') {
             this.removeActor(actor);
+            // тут лучше использовать метод noMoreActors
             if (!this.actors.find(value => value.type === 'coin')) {
                 this.status = 'won';
             }
@@ -151,6 +175,7 @@ class Level {
 }
 
 class LevelParser {
+    // не корректный тип значения по-умолчанию
     constructor(dictionary = '{}') {
         this.dictionary = {
             ...dictionary
@@ -162,18 +187,23 @@ class LevelParser {
     obstacleFromSymbol(symbol) {
         if (symbol === 'x') {
             return 'wall';
+        // else можно убрать
         } else if (symbol === '!') {
             return 'lava';
+        // лишняя ветка
         } else if (symbol !== 'x' && symbol !== '!') {
             return undefined;
         }
     }
 
     createGrid(plan) {
+        // лучше явно указывать вызов функции,
+        // сечас у вас в obstacleFromSymbol будет передаваться 3 армента
         return plan.map(row => row.split('').map(this.obstacleFromSymbol));
     }
 
     createActors(plan) {
+        // actor лучше назвать line, наверное
         return plan.reduce((result, actor, j) => {
             return result.concat(actor.split('').reduce((result, char, i) => {
                 const func = this.actorFromSymbol(char);
@@ -202,6 +232,7 @@ class Fireball extends Actor {
     }
 
     getNextPosition(time = 1) {
+        // тут лучше использовать методы класса Vector
         return new Vector(this.pos.x + this.speed.x * time, this.pos.y + this.speed.y * time);
     }
 
@@ -210,6 +241,9 @@ class Fireball extends Actor {
     }
 
     act(time, level) {
+        // если значение присваивается 1 раз,
+        // то лучше исопльзовать const,
+        // если несколько, то let
         var newPosition = this.getNextPosition(time);
 
         if (level.obstacleAt(newPosition, this.size)) {
@@ -252,6 +286,7 @@ class FireRain extends Fireball {
 class Coin extends Actor {
     constructor(pos = new Vector(0, 0)) {
         super(pos, new Vector(0.6, 0.6));
+        // pos должен задаваться через вызов родительского конструктора
         this.pos = new Vector(this.pos.x + 0.2, this.pos.y + 0.1);
         this.springSpeed = 8;
         this.springDist = 0.07;
