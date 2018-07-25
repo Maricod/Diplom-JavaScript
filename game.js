@@ -50,9 +50,13 @@ class Actor {
         if (!(actor instanceof Actor)) {
             throw new Error("Неверно задан actor");
         }
+
+        // вторая и третья проверки - лишние
         if (actor === this || actor.size.x < 0 || actor.size.y < 0) {
             return false;
         }
+        // вот здесь ошибка
+        // должно быть 4 условия (выше, левее, правее или ниже)
         if (this.top <= actor.bottom && this.right <= actor.left || this.right <= actor.left && this.bottom >= actor.top || this.left >= actor.right && this.bottom >= actor.top || this.left >= actor.right && this.top <= actor.bottom || this.top === actor.bottom || this.right === actor.left || this.left === actor.right || this.bottom === actor.top) {
             return false;
         }
@@ -109,6 +113,8 @@ class Level {
                 }
             }
         }
+
+        // лишняя строчка, функция и так возвращает undefined, если не указано иное
         return undefined;
     }
 
@@ -117,6 +123,7 @@ class Level {
     }
 
     noMoreActors(type) {
+        // скобки вокруг actor можно убрать
         return !this.actors.some((actor) => actor.type === type);
     }
     playerTouched(type, actor) {
@@ -151,11 +158,15 @@ class LevelParser {
     }
 
     createGrid(plan) {
+        // не называйте аргументы одинаково, так легко запутаться
         return plan.map(row => row.split('')).map(row => row.map(row => this.obstacleFromSymbol(row)));
     }
 
     createActors(plan) {
         return plan.reduce((result, line, j) => {
+            // перемудрили, тут можно либо передавать родительский result
+            // в начальное значение reduce
+            // или просто использовать forEach
             return result.concat(line.split('').reduce((result, char, i) => {
                 const func = this.actorFromSymbol(char);
                 if (typeof func === "function") {
