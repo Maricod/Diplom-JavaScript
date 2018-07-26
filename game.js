@@ -50,14 +50,8 @@ class Actor {
         if (!(actor instanceof Actor)) {
             throw new Error("Неверно задан actor");
         }
-
-        // вторая и третья проверки - лишние
-        if (actor === this || actor.size.x < 0 || actor.size.y < 0) {
-            return false;
-        }
-        // вот здесь ошибка
-        // должно быть 4 условия (выше, левее, правее или ниже)
-        if (this.top <= actor.bottom && this.right <= actor.left || this.right <= actor.left && this.bottom >= actor.top || this.left >= actor.right && this.bottom >= actor.top || this.left >= actor.right && this.top <= actor.bottom || this.top === actor.bottom || this.right === actor.left || this.left === actor.right || this.bottom === actor.top) {
+       
+        if ((actor === this) || (actor.left >= this.right) || (actor.right <= this.left) || (actor.top >= this.bottom) || (actor.bottom <= this.top)) {
             return false;
         }
         return true;
@@ -113,9 +107,6 @@ class Level {
                 }
             }
         }
-
-        // лишняя строчка, функция и так возвращает undefined, если не указано иное
-        return undefined;
     }
 
     removeActor(actor) {
@@ -123,8 +114,7 @@ class Level {
     }
 
     noMoreActors(type) {
-        // скобки вокруг actor можно убрать
-        return !this.actors.some((actor) => actor.type === type);
+        return !this.actors.some(actor => actor.type === type);
     }
     playerTouched(type, actor) {
         if (this.status !== null) {
@@ -158,26 +148,25 @@ class LevelParser {
     }
 
     createGrid(plan) {
-        // не называйте аргументы одинаково, так легко запутаться
-        return plan.map(row => row.split('')).map(row => row.map(row => this.obstacleFromSymbol(row)));
+      return plan.map(lowerString => {
+        return lowerString.split('').map(symbol => this.obstacleFromSymbol(symbol));
+      });
     }
 
     createActors(plan) {
-        return plan.reduce((result, line, j) => {
-            // перемудрили, тут можно либо передавать родительский result
-            // в начальное значение reduce
-            // или просто использовать forEach
-            return result.concat(line.split('').reduce((result, char, i) => {
-                const func = this.actorFromSymbol(char);
-                if (typeof func === "function") {
-                    const line = new func(new Vector(i, j));
-                    if (line instanceof Actor) {
-                        result.push(line);
-                    }
-                }
-                return result;
-            }, []));
-        }, []);
+let actors = [];
+      let splittedArr = plan.map(el => el.split(''));
+      splittedArr.forEach((row, y) => {
+        row.forEach((cell, x) => {
+          if (this.dictionary && this.dictionary[cell] && typeof this.dictionary[cell] === 'function') {
+            let actor = new this.dictionary[cell] (new Vector(x, y));
+            if (actor instanceof Actor) {
+                actors.push(actor);
+            }
+          }
+        });
+      });
+      return actors;
     }
     parse(plan) {
         return new Level(this.createGrid(plan), this.createActors(plan));
@@ -284,33 +273,56 @@ class Player extends Actor {
 
 
 const schemas = [
-    [
-        '         ',
-        '         ',
-        '    =    ',
-        '       o ',
-        '     !xxx',
-        ' @       ',
-        'xxx!     ',
-        '         '
-    ],
-    [
-        '      v  ',
-        '    v    ',
-        '  v      ',
-        '        o',
-        '        x',
-        '@   x    ',
-        'x        ',
-        '         '
-    ]
+  [
+    '         ',
+    '   h     ',
+    '         ',
+    '       o ',
+    '@     xxx',
+    '         ',
+    'xxx      ',
+    '         '
+  ],
+  [
+    '   v     ',
+    '         ',
+    '         ',
+    '@       o',
+    '        x',
+    '    x    ',
+    'x        ',
+    '         '
+  ],
+   [
+    '            ',
+    '      v     ',
+    '           o',
+    '@       o  x',
+    '    o   x   ',
+    '    x       ',
+    'x           ',
+    '            '
+  ],
+   [
+    ' v           ',
+    '             ',
+    '             ',
+    '@   h    o   ',
+    '        xx   ',
+    '    xx       ',
+    'xx         o ',
+    '           xx'
+  ]
 ];
+
 const actorDict = {
-    '@': Player,
-    'v': FireRain,
-    '=': HorizontalFireball,
-    'o': Coin
-};
+  '@': Player,
+  'v': VerticalFireball,
+  'o': Coin,
+  'h': HorizontalFireball,
+  'f': FireRain
+}
+
 const parser = new LevelParser(actorDict);
 runGame(schemas, parser, DOMDisplay)
-    .then(() => console.log('Вы выиграли приз!'));
+  .then(() => alert('Вы выиграли приз!'));
