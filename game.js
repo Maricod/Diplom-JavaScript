@@ -51,8 +51,11 @@ class Actor {
             throw new Error("Неверно задан actor");
         }
        
-        // это лучше разбить на 2 if
-        if ((actor === this) || (actor.left >= this.right) || (actor.right <= this.left) || (actor.top >= this.bottom) || (actor.bottom <= this.top)) {
+        if (actor === this) {
+       	return false;
+            
+       }
+        if ((actor.left >= this.right) || (actor.right <= this.left) || (actor.top >= this.bottom) || (actor.bottom <= this.top)) {
             return false;
         }
         return true;
@@ -155,23 +158,18 @@ class LevelParser {
     }
 
     createActors(plan) {
-      // форматирование
-      // значение присваивается переменной один раз - лучше использовать const
-let actors = [];
+      const actors = [];
       let splittedArr = plan.map(el => el.split(''));
       splittedArr.forEach((row, y) => {
-        row.forEach((cell, x) => {
-          // первуя часть проверки можно убрать
-          // (целостность объекта лучше проверять в конструкторе)
-          // this.dictionary[cell] это дублирование метода actorFromSymbol
-          if (this.dictionary && this.dictionary[cell] && typeof this.dictionary[cell] === 'function') {
-            // const
-            let actor = new this.dictionary[cell] (new Vector(x, y));
-            if (actor instanceof Actor) {
-                actors.push(actor);
-            }
-          }
-        });
+          row.forEach((cell, x) => {
+              const constructor = this.actorFromSymbol(cell);
+              if (constructor && typeof constructor === 'function') {
+                  const actor = new constructor(new Vector(x, y));
+                  if (actor instanceof Actor) {
+                      actors.push(actor);
+                  }
+              }
+          });
       });
       return actors;
     }
@@ -198,8 +196,7 @@ class Fireball extends Actor {
     }
 
     act(time, level) {
-        // const
-        let newPosition = this.getNextPosition(time);
+        const newPosition = this.getNextPosition(time);
 
         if (level.obstacleAt(newPosition, this.size)) {
 
@@ -260,7 +257,7 @@ class Coin extends Actor {
     }
 
     getNextPosition(time = 1) {
-        this.updateSpring(time) // точка с запятой
+        this.updateSpring(time);
         return this.startPos.plus(this.getSpringVector());
     }
 
