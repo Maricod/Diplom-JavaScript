@@ -50,23 +50,14 @@ class Actor {
         if (!(actor instanceof Actor)) {
             throw new Error("Неверно задан actor");
         }
-       
-        // форматирование поехало
+
         if (actor === this) {
-       	return false;
-            
-       }
-        // тут можно обратить условие в if и написать просто return <условие>
-        // чтобы обратить условие нужно заменить || на &&
-        // и операторы на противоположные >= на <, <= на >
-        // скобки, кстати, тут можно везде опустить
-        if ((actor.left >= this.right) || (actor.right <= this.left) || (actor.top >= this.bottom) || (actor.bottom <= this.top)) {
             return false;
         }
-        return true;
-
-    }
-}
+        
+        return actor.left < this.right && actor.right > this.left && actor.top < this.bottom && actor.bottom > this.top;
+        }
+        }
 
 class Level {
     constructor(grid = [], actors = []) {
@@ -156,31 +147,24 @@ class LevelParser {
         }
     }
 
-    createGrid(plan) {
-      // здесь можно использовать короткую форму записы стрелочной функции
-      // (без фигурных скобок и return)
-      return plan.map(lowerString => {
-        return lowerString.split('').map(symbol => this.obstacleFromSymbol(symbol));
-      });
-    }
+   createGrid(plan) {
+    return plan.map(lowerString => lowerString.split('').map(symbol => this.obstacleFromSymbol(symbol)));
+}
+
 
     createActors(plan) {
-      const actors = [];
-      // значение присваивается переменной 1 раз,
-      // поэтому лучше использовать const
-      // в данном случае можно вообще убрать эту переменную
-      let splittedArr = plan.map(el => el.split(''));
-      splittedArr.forEach((row, y) => {
-          row.forEach((cell, x) => {
-              const constructor = this.actorFromSymbol(cell);
-              if (constructor && typeof constructor === 'function') {
-                  const actor = new constructor(new Vector(x, y));
-                  if (actor instanceof Actor) {
-                      actors.push(actor);
-                  }
-              }
-          });
-      });
+            const actors = [];
+            plan.map(el => el.split('')).forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    const constructor = this.actorFromSymbol(cell);
+                    if (constructor && typeof constructor === 'function') {
+                        const actor = new constructor(new Vector(x, y));
+                        if (actor instanceof Actor) {
+                            actors.push(actor);
+                        }
+                    }
+                });
+            });
       return actors;
     }
     parse(plan) {
@@ -336,7 +320,7 @@ const actorDict = {
   'o': Coin,
   'h': HorizontalFireball,
   'f': FireRain
-} // точка с запятой :)
+};
 
 const parser = new LevelParser(actorDict);
 runGame(schemas, parser, DOMDisplay)
