@@ -29,6 +29,10 @@ class Actor {
     }
     act() {}
 
+    get type() {
+        return 'actor';
+    }
+
     get left() {
         return this.pos.x;
     }
@@ -42,10 +46,6 @@ class Actor {
         return this.pos.y + this.size.y;
     }
 
-    get type() {
-        return 'actor';
-    }
-
     isIntersect(actor) {
         if (!(actor instanceof Actor)) {
             throw new Error("Неверно задан actor");
@@ -54,10 +54,10 @@ class Actor {
         if (actor === this) {
             return false;
         }
-        
+
         return actor.left < this.right && actor.right > this.left && actor.top < this.bottom && actor.bottom > this.top;
-        }
-        }
+    }
+}
 
 class Level {
     constructor(grid = [], actors = []) {
@@ -69,12 +69,11 @@ class Level {
         this.finishDelay = 1;
         this.player = this.actors.find(value => value.type === 'player');
     }
-
     isFinished() {
         return this.status !== null && this.finishDelay < 0;
     }
 
-   actorAt(actor) {
+    actorAt(actor) {
         if (!(actor instanceof Actor)) {
             throw new Error("Неверно передан actor");
         }
@@ -89,7 +88,6 @@ class Level {
         const xEnd = Math.ceil(pos.x + size.x);
         const yStart = Math.floor(pos.y);
         const yEnd = Math.ceil(pos.y + size.y);
-
 
         if (xStart < 0 || xEnd > this.width || yStart < 0) {
             return 'wall';
@@ -131,6 +129,7 @@ class Level {
     }
 }
 
+
 class LevelParser {
     constructor(dictionary) {
         this.dictionary = Object.assign({}, dictionary);
@@ -146,26 +145,24 @@ class LevelParser {
             return 'lava';
         }
     }
-
-   createGrid(plan) {
-    return plan.map(lowerString => lowerString.split('').map(symbol => this.obstacleFromSymbol(symbol)));
-}
-
+    createGrid(plan) {
+        return plan.map(lowerString => lowerString.split('').map(symbol => this.obstacleFromSymbol(symbol)));
+    }
 
     createActors(plan) {
-            const actors = [];
-            plan.map(el => el.split('')).forEach((row, y) => {
-                row.forEach((cell, x) => {
-                    const constructor = this.actorFromSymbol(cell);
-                    if (constructor && typeof constructor === 'function') {
-                        const actor = new constructor(new Vector(x, y));
-                        if (actor instanceof Actor) {
-                            actors.push(actor);
-                        }
+        const actors = [];
+        plan.map(el => el.split('')).forEach((row, y) => {
+            row.forEach((cell, x) => {
+                const constructor = this.actorFromSymbol(cell);
+                if (constructor && typeof constructor === 'function') {
+                    const actor = new constructor(new Vector(x, y));
+                    if (actor instanceof Actor) {
+                        actors.push(actor);
                     }
-                });
+                }
             });
-      return actors;
+        });
+        return actors;
     }
     parse(plan) {
         return new Level(this.createGrid(plan), this.createActors(plan));
@@ -202,7 +199,6 @@ class Fireball extends Actor {
         }
     }
 }
-
 
 class HorizontalFireball extends Fireball {
     constructor(pos = new Vector(0, 0)) {
@@ -272,56 +268,56 @@ class Player extends Actor {
 
 
 const schemas = [
-  [
-    '         ',
-    '   h     ',
-    '         ',
-    '       o ',
-    '@     xxx',
-    '         ',
-    'xxx      ',
-    '         '
-  ],
-  [
-    '   v     ',
-    '         ',
-    '         ',
-    '@       o',
-    '        x',
-    '    x    ',
-    'x        ',
-    '         '
-  ],
-   [
-    '            ',
-    '      v     ',
-    '           o',
-    '@       o  x',
-    '    o   x   ',
-    '    x       ',
-    'x           ',
-    '            '
-  ],
-   [
-    ' v           ',
-    '             ',
-    '             ',
-    '@   h    o   ',
-    '        xx   ',
-    '    xx       ',
-    'xx         o ',
-    '           xx'
-  ]
+    [
+        '         ',
+        '   h     ',
+        '         ',
+        '       o ',
+        '@     xxx',
+        '         ',
+        'xxx      ',
+        '         '
+    ],
+    [
+        '   v     ',
+        '         ',
+        '         ',
+        '@       o',
+        '        x',
+        '    x    ',
+        'x        ',
+        '         '
+    ],
+    [
+        '            ',
+        '      v     ',
+        '           o',
+        '@       o  x',
+        '    o   x   ',
+        '    x       ',
+        'x           ',
+        '            '
+    ],
+    [
+        ' v           ',
+        '             ',
+        '             ',
+        '@   h    o   ',
+        '        xx   ',
+        '    xx       ',
+        'xx         o ',
+        '           xx'
+    ]
 ];
 
 const actorDict = {
-  '@': Player,
-  'v': VerticalFireball,
-  'o': Coin,
-  'h': HorizontalFireball,
-  'f': FireRain
+    '@': Player,
+    'v': VerticalFireball,
+    'o': Coin,
+    'h': HorizontalFireball,
+    'f': FireRain
 };
 
 const parser = new LevelParser(actorDict);
 runGame(schemas, parser, DOMDisplay)
-  .then(() => alert('Вы выиграли приз!'));
+    .then(() => alert('Вы выиграли приз!'));
